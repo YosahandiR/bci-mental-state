@@ -25,7 +25,7 @@ pip install -r requirements.txt
 
 - `mental_state_collect.py` — main data collection script
 - `requirements.txt` — Python dependencies
-- `rain.wav` — ambient rain audio for relaxed trials (not included, add your own)
+- `rain.wav` — ambient rain audio for relaxed trials
 
 ## Usage
 

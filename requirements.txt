@@ -1,0 +1,11 @@
+psychopy
+numpy
+scipy
+scikit-learn
+mne
+matplotlib
+brainflow
+pyserial
+pygame
+sounddevice
+pyttsx3

@@ -20,6 +20,7 @@ RUN            = 1
 DATA_DIR       = f'data/mental_state/sub-{SUBJECT:02d}/ses-{SESSION:02d}/'
 SAMPLING_RATE  = 250
 NOTCH_FREQ     = 60
+TRIAL_DURATION = 10.0
 
 BANDS = {
     'Theta(4-7 Hz)': (4, 7),
@@ -72,6 +73,7 @@ def extract_band_power(eeg_trials, labels, fs=SAMPLING_RATE):
     results = {name: {'relaxed': [], 'focused': []} for name in BANDS}
 
     for trial, label in zip(eeg_trials, labels):
+        trial = np.array(trial, dtype=np.float64)
         trial = preprocess(trial, fs)
         for band_name,(lo, hi) in BANDS.items():
             power = bandpower(trial, fs, band=(lo,hi))
@@ -140,10 +142,24 @@ def plot_results(results):
     print("\nPlot saved to: band_power_results.png")
     plt.show()
 
-#-------------
-# MAIN
-#-------------
+
+
+def create_mock_data():
+    os.makedirs(DATA_DIR, exist_ok=True)
+    n_trials = 6
+    n_channels = 8
+    n_samples = int(TRIAL_DURATION * SAMPLING_RATE)  # 2500 samples
+
+    eeg_trials = np.array([np.random.randn(n_channels, n_samples) for _ in range(n_trials)], dtype=object)
+    labels = np.array(['relaxed', 'focused', 'relaxed', 'focused', 'relaxed', 'focused'])
+
+    np.save(DATA_DIR + f'eeg_trials_run-{RUN}.npy', eeg_trials)
+    np.save(DATA_DIR + f'labels_run-{RUN}.npy', labels)
+    print("Mock data created!")
+
+# Change your main block to this temporarily:
 if __name__ == '__main__':
+    create_mock_data()  # ← add this line
     eeg_trials, labels = load_data(DATA_DIR, RUN)
     results = extract_band_power(eeg_trials, labels)
     print_summary(results)

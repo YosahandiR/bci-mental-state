@@ -8,7 +8,7 @@ from queue import Queue
 # ──────────────────────────────────────────────
 # CONFIGURATION
 # ──────────────────────────────────────────────
-MOCK_MODE      = True
+MOCK_MODE      = False
 SUBJECT        = 1
 SESSION        = 1
 RUN            = 1
@@ -25,6 +25,7 @@ WINDOW_H       = 720
 RAIN_FILE = 'rain.wav'
 
 AUDIO_PROMPTS = {
+
     'relaxed': "Please relax.",
     'focused': "Keep a running total.",
 }
@@ -101,7 +102,7 @@ def find_openbci_port():
 def start_brainflow():
     from brainflow.board_shim import BoardShim, BrainFlowInputParams
     params             = BrainFlowInputParams()
-    params.serial_port = find_openbci_port()
+    params.serial_port = 'COM4'
     board              = BoardShim(CYTON_BOARD_ID, params)
     board.prepare_session()
     board.config_board('/0')
@@ -140,7 +141,7 @@ def play_beep(frequency=880, duration=0.3):
         tone[:fade]  *= np.linspace(0, 1, fade)
         tone[-fade:] *= np.linspace(1, 0, fade)
         print(f"[BEEP] device: {sd.query_devices(kind='output')['name']}")
-        sd.play(tone, srate)
+        sd.play(tone*0.3, srate)
         sd.wait()
         print("[BEEP] done")
     except Exception as e:

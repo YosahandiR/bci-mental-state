@@ -16,9 +16,9 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ──────────────────────────────────────────────
 # CONFIGURATION
 # ──────────────────────────────────────────────
-SUBJECT        = 1
-SESSION        = 1
-RUN            = 1
+SUBJECT        = 3
+SESSION        = 2
+RUN            = 2
 DATA_DIR       = f'data/mental_state/sub-{SUBJECT:02d}/ses-{SESSION:02d}/'
 SAMPLING_RATE  = 250
 NOTCH_FREQ     = 60

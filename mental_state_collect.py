@@ -9,15 +9,15 @@ from queue import Queue
 # CONFIGURATION
 # ──────────────────────────────────────────────
 MOCK_MODE      = False
-SUBJECT        = 1
-SESSION        = 1
-RUN            = 1
+SUBJECT        = 3
+SESSION        = 2
+RUN            = 2
 SAVE_DIR       = f'data/mental_state/sub-{SUBJECT:02d}/ses-{SESSION:02d}/'
 SAMPLING_RATE  = 250
-N_PER_CLASS    = 3 if MOCK_MODE else 20
+N_PER_CLASS    = 3 if MOCK_MODE else 5
 TRIAL_DURATION = 8.0
 BASELINE_DUR   = 1.0 if MOCK_MODE else 2.0
-REST_BETWEEN   = 1.0 if MOCK_MODE else 3.0
+REST_BETWEEN   = 1.0 if MOCK_MODE else 1
 CLASSES        = ['relaxed', 'focused']
 WINDOW_W       = 1280
 WINDOW_H       = 720
@@ -27,11 +27,11 @@ RAIN_FILE = 'rain.wav'
 AUDIO_PROMPTS = {
 
     'relaxed': "Please relax.",
-    'focused': "Keep a running total.",
+    'focused': "Keep a running total.",         
 }
 
 # Running total task: numbers spoken every N seconds during focused trials
-RUNNING_TOTAL_INTERVAL = 1.0   # seconds between each number
+RUNNING_TOTAL_INTERVAL = 0.2  # seconds between each number
 RUNNING_TOTAL_RANGE    = (2, 20)  # range of numbers to add each time
 
 # ──────────────────────────────────────────────

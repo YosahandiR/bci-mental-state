@@ -10,6 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import welch, butter, filtfilt, iirnotch
 import os
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 # ──────────────────────────────────────────────
 # CONFIGURATION
@@ -80,6 +82,70 @@ def extract_band_power(eeg_trials, labels, fs=SAMPLING_RATE):
 
     return results
 
+def plot_band_timeseries(eeg_trials, labels, fs=SAMPLING_RATE, window_s=1.0, step_s=0.25):
+    bands_to_plot = {
+        'Theta(4-7 Hz)':   BANDS['Theta(4-7 Hz)'],
+        'Alpha (8-12 Hz)': BANDS['Alpha (8-12 Hz)'],
+        'Beta (13-30 Hz)': BANDS['Beta (13-30 Hz)'],
+    }
+    colors = {'relaxed': '#4C9BE8', 'focused': '#E8834C'}
+
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    fig.suptitle('EEG Band Power Over Time — Relaxed vs Focused', fontsize=14, fontweight='bold')
+
+    for ax, (band_name, (lo, hi)) in zip(axes, bands_to_plot.items()):
+        window_samp = int(window_s * fs)
+        step_samp   = int(step_s * fs)
+        plotted_labels = set()
+
+        def get_timeseries(trial):
+            times, powers = [], []
+            n_samples = trial.shape[1]
+            for start in range(0, n_samples - window_samp + 1, step_samp):
+                segment = trial[:, start:start + window_samp]
+                freqs, psd = welch(segment, fs=fs, nperseg=window_samp)
+                idx = (freqs >= lo) & (freqs <= hi)
+                powers.append(psd[:, idx].mean())
+                times.append((start + window_samp / 2) / fs)
+            return np.array(times), np.array(powers)
+
+        # Plot individual trial traces
+        for trial, label in zip(eeg_trials, labels):
+            trial = preprocess(trial, fs)
+            times, powers = get_timeseries(trial)
+            ax.plot(times, powers,
+                    color=colors[label], alpha=0.3,
+                    label=label if label not in plotted_labels else None)
+            plotted_labels.add(label)
+
+        # Plot per-condition mean
+        for label, color in colors.items():
+            trial_series = []
+            trial_times  = None
+            for trial, lbl in zip(eeg_trials, labels):
+                if lbl != label:
+                    continue
+                trial = preprocess(trial, fs)
+                times, powers = get_timeseries(trial)
+                trial_series.append(powers)
+                trial_times = times
+            if trial_series and trial_times is not None:
+                mean_power = np.mean(trial_series, axis=0)
+                ax.plot(trial_times, mean_power,
+                        color=color, linewidth=2.5,
+                        label=f'{label} (mean)')
+
+        ax.set_title(band_name, fontsize=11)
+        ax.set_xlabel('Time within trial (s)')
+        ax.set_ylabel('Power (uV^2/Hz)')
+        ax.legend()
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+    plt.tight_layout()
+    plt.savefig('band_timeseries.png', dpi=150, bbox_inches='tight')
+    print("Time series plot saved to: band_timeseries.png")
+    plt.show()
 #------------
 # SUMMARY
 #------------
@@ -148,3 +214,4 @@ if __name__ == '__main__':
     results = extract_band_power(eeg_trials, labels)
     print_summary(results)
     plot_results(results)
+    plot_band_timeseries(eeg_trials, labels)

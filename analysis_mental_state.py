@@ -2,9 +2,11 @@
 # ------------------------
 # Loads EEG trials from mental_state_collect.py
 # 1. Applies a notch filter with 60 Hz bandpower noise removal
-# 2. Applies bandpass filter 1-40 Hz
+# 2. Applies bandpass filter 1-40 Hz noise removal
 # 3. Extracts Beta, Alpha, and Theta
 # 4. Compares the results and plots them in a graph
+
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,7 +38,7 @@ def load_data(data_dir, run):
     eeg_path = data_dir + f'eeg_trials_run-{run}.npy'
     labels_path = data_dir + f'labels_run-{run}.npy'
 
-    if not os.path.exists(eeg_path):
+    if not os.path.exists(eeg_path): #Makes sure the path exists
         raise FileNotFoundError(f"Could not find: {eeg_path}\nMake sure data is loaded")
     eeg_trials = np.load(eeg_path, allow_pickle=True)
     labels = np.load(labels_path, allow_pickle=True)
@@ -45,7 +47,7 @@ def load_data(data_dir, run):
 #---------------
 # FILTERING
 #---------------
-
+#Removes 60Hz of notch noise and 1-40Hz of bandpass noise to isolate brain signals
 def notch_filter(eeg, fs=SAMPLING_RATE, freq=NOTCH_FREQ):
     b, a = iirnotch(freq, Q=30, fs=fs)
     return filtfilt(b, a, eeg, axis=1)
@@ -65,12 +67,14 @@ def preprocess(eeg, fs=SAMPLING_RATE):
 # BANDPOWER
 #----------------
 def bandpower(eeg, fs=SAMPLING_RATE, band=(8,12)):
-    freqs, psd = welch(eeg, fs=fs, nperseg=min(fs*2, eeg.shape[1]))
-    idx = (freqs >= band[0]) & (freqs <= band[1])
-    return psd[:, idx].mean(axis=1) #avg over frequencies in band
+    freqs, psd = welch(eeg, fs=fs, nperseg=min(fs*2, eeg.shape[1])) #Computes power at all frequencies
+    idx = (freqs >= band[0]) & (freqs <= band[1]) #Finds the frequency range given
+    return psd[:, idx].mean(axis=1) # returns the avg over frequencies in band
 
+
+#Extracts the brandpower three times for Alpha, Theta, and Beta
 def extract_band_power(eeg_trials, labels, fs=SAMPLING_RATE):
-    results = {name: {'relaxed': [], 'focused': []} for name in BANDS}
+    results = {name: {'relaxed': [], 'focused': []} for name in BANDS} 
 
     for trial, label in zip(eeg_trials, labels):
         trial = np.array(trial, dtype=np.float64)
@@ -85,14 +89,15 @@ def extract_band_power(eeg_trials, labels, fs=SAMPLING_RATE):
 #------------
 # SUMMARY
 #------------
+#Print out the summary table of the data collected
 def print_summary(results):
-    print("\n" + "="*55)
-    print(f"{'Band':<20} {'Relaxed (mean)':<20} {'Focused (mean)'}")
+    print("\n" + "="*55) #Prints divider of 55 equal signs
+    print(f"{'Band':<20} {'Relaxed (mean)':<20} {'Focused (mean)'}") #Formats each charcater to be 20 characters wide for cleaner formatting
     print("="*55)
-    for band_name, conditions in results.items():
+    for band_name, conditions in results.items(): #Shows nan instead of crashing if there are no trials for a given condition
         relaxed_mean = np.mean(conditions['relaxed']) if conditions['relaxed'] else float('nan')
         focused_mean = np.mean(conditions['focused']) if conditions['focused'] else float('nan')
-        print(f"{band_name:<20} {relaxed_mean:<20.4f} {focused_mean:.4f}")
+        print(f"{band_name:<20} {relaxed_mean:<20.4f} {focused_mean:.4f}") #Each will be four decimal places
     print("="*55)
 
     print("\nInterpretation guide:")
@@ -108,13 +113,14 @@ def plot_results(results):
     n_bands = len(band_names)
 
     fig, axes = plt.subplots(1, n_bands, figsize=(5 * n_bands, 5))
-    fig.suptitle('EEG Bandpower: Relaved vs Focused:', fontsize=14, fontweight='bold')
+    fig.suptitle('EEG Bandpower: Relaxed vs Focused:', fontsize=14, fontweight='bold')
     colors = {'relaxed': '#4C9BE8', 'focused': '#E8834C'}
 
     for ax, band_name in zip(axes, band_names):
         relaxed_vals = results[band_name]['relaxed']
         focused_vals = results[band_name]['focused']
 
+        #Calculates the mean and standard deviation of the data for each participant
         means = [np.mean(relaxed_vals) if relaxed_vals else 0,
                 np.mean(focused_vals) if focused_vals else 0]
         stds = [np.std(relaxed_vals) if relaxed_vals else 0,
@@ -147,3 +153,5 @@ if __name__ == '__main__':
     results = extract_band_power(eeg_trials, labels)
     print_summary(results)
     plot_results(results)
+
+#Used ClaudeAI to help me implement the bandpower and filtering aspects

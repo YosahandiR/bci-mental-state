@@ -8,16 +8,16 @@ from queue import Queue
 # ──────────────────────────────────────────────
 # CONFIGURATION
 # ──────────────────────────────────────────────
-MOCK_MODE      = True
-SUBJECT        = 1
-SESSION        = 1
-RUN            = 1
+MOCK_MODE      = False
+SUBJECT        = 3
+SESSION        = 2
+RUN            = 2
 SAVE_DIR       = f'data/mental_state/sub-{SUBJECT:02d}/ses-{SESSION:02d}/'
 SAMPLING_RATE  = 250
-N_PER_CLASS    = 3 if MOCK_MODE else 20
-TRIAL_DURATION = 10.0
+N_PER_CLASS    = 3 if MOCK_MODE else 5
+TRIAL_DURATION = 8.0
 BASELINE_DUR   = 1.0 if MOCK_MODE else 2.0
-REST_BETWEEN   = 1.0 if MOCK_MODE else 3.0
+REST_BETWEEN   = 1.0 if MOCK_MODE else 1
 CLASSES        = ['relaxed', 'focused']
 WINDOW_W       = 1280
 WINDOW_H       = 720
@@ -25,12 +25,13 @@ WINDOW_H       = 720
 RAIN_FILE = 'rain.wav'
 
 AUDIO_PROMPTS = {
+
     'relaxed': "Please relax.",
-    'focused': "Keep a running total.",
+    'focused': "Keep a running total.",         
 }
 
 # Running total task: numbers spoken every N seconds during focused trials
-RUNNING_TOTAL_INTERVAL = 1.0   # seconds between each number
+RUNNING_TOTAL_INTERVAL = 0.2  # seconds between each number
 RUNNING_TOTAL_RANGE    = (2, 20)  # range of numbers to add each time
 
 # ──────────────────────────────────────────────
@@ -101,7 +102,7 @@ def find_openbci_port():
 def start_brainflow():
     from brainflow.board_shim import BoardShim, BrainFlowInputParams
     params             = BrainFlowInputParams()
-    params.serial_port = find_openbci_port()
+    params.serial_port = 'COM4'
     board              = BoardShim(CYTON_BOARD_ID, params)
     board.prepare_session()
     board.config_board('/0')
@@ -140,7 +141,7 @@ def play_beep(frequency=880, duration=0.3):
         tone[:fade]  *= np.linspace(0, 1, fade)
         tone[-fade:] *= np.linspace(1, 0, fade)
         print(f"[BEEP] device: {sd.query_devices(kind='output')['name']}")
-        sd.play(tone, srate)
+        sd.play(tone*0.3, srate)
         sd.wait()
         print("[BEEP] done")
     except Exception as e:

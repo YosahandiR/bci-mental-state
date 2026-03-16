@@ -43,6 +43,7 @@ def load_data(data_dir, run):
     if not os.path.exists(eeg_path): #Makes sure the path exists
         raise FileNotFoundError(f"Could not find: {eeg_path}\nMake sure data is loaded")
     eeg_trials = np.load(eeg_path, allow_pickle=True)
+    eeg_trials = np.array([np.array(t, dtype=np.float64) for t in eeg_trials])
     labels = np.load(labels_path, allow_pickle=True)
     return eeg_trials, labels
 
@@ -219,9 +220,6 @@ if __name__ == '__main__':
     results = extract_band_power(eeg_trials, labels)
     print_summary(results)
     plot_results(results)
-<<<<<<< HEAD
-
-#Used ClaudeAI to help me implement the bandpower and filtering aspects
-=======
     plot_band_timeseries(eeg_trials, labels)
->>>>>>> upstream/main
+
+#Used ClaudeAI to help with understanding the use of some of the functions time series, and plot data
